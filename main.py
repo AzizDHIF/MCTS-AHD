@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 from utils.utils import init_client
 from ahd_adapter import AHD as LHH
-
+import sys
 ROOT_DIR = os.getcwd()
 logging.basicConfig(level=logging.INFO)
 
@@ -33,7 +33,7 @@ def main(cfg):
     test_script_stdout = "best_code_overall_val_stdout.txt"
     logging.info(f"Running validation script...: {test_script}")
     with open(test_script_stdout, 'w') as stdout:
-        subprocess.run(["python", test_script, "-1", ROOT_DIR, "val"], stdout=stdout)
+        subprocess.run([sys.executable, test_script, "-1", ROOT_DIR, "val"], stdout=stdout)
     logging.info(f"Validation script finished. Results are saved in {test_script_stdout}.")
     
     # Print the results

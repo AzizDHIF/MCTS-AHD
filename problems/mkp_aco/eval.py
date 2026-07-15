@@ -1,10 +1,12 @@
+import os 
+import sys
+root_dir = sys.argv[2]
+sys.path.insert(0, root_dir)
 from aco import ACO
 import numpy as np
 import torch
 import logging
 import sys
-sys.path.insert(0, "../../../")
-
 import gpt
 from utils.utils import get_heuristic_name
 
