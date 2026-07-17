@@ -4,7 +4,6 @@ import subprocess
 import re
 import sys
 from typing import List, Any
-
 from utils.utils import block_until_running, file_to_string, filter_traceback
 
 
@@ -21,15 +20,25 @@ class Prompts:
         self.func_signature = file_to_string(f'{problem_prompt_path}/func_signature.txt').format(version=2).strip()
         self.func_desc = file_to_string(f'{problem_prompt_path}/func_desc.txt')
 
-        match = re.match(r'^def +(.+?)\((.*)\) *-> *(.*?) *:', self.func_signature)
+        match = re.match(r'^([\w\s\*]+?)\s+(\w+)\s*\((.*?)\)\s*;?\s*$', self.func_signature)
         assert match is not None
-        self.prompt_func_name = match.group(1)
-        self.prompt_func_inputs = [txt.split(":")[0].strip() for txt in match.group(2).split(",")]
+        self.prompt_func_return_type = match.group(1).strip()
+        self.prompt_func_name = match.group(2)
+
+        def extract_param_name(param: str) -> str:
+            param = param.strip()
+            # drop pointer/array brackets, keep the identifier just before them
+            param = param.split('[')[0].strip()
+            # last whitespace-separated token is the variable name
+            return param.split()[-1]
+
+        self.prompt_func_inputs = [extract_param_name(p) for p in match.group(3).split(",")]
+
         if self.prompt_func_name.startswith('select_next_node'):
             self.prompt_func_outputs = ['next_node']
         elif self.prompt_func_name.startswith('priority'):
             self.prompt_func_outputs = ['priority']
-        elif self.prompt_func_name.startswith('heuristics'):
+        elif self.prompt_func_name.startswith('heuristic'):   # was 'heuristics' -> won't match 'heuristic2'
             self.prompt_func_outputs = ['heuristics_matrix']
         elif self.prompt_func_name.startswith('crossover'):
             self.prompt_func_outputs = ['offsprings']
@@ -67,7 +76,7 @@ class Problem:
         self.problem_size = self.config.problem.problem_size
         self.obj_type = self.config.problem.obj_type
         self.problem_type = self.config.problem.problem_type
-        self.output_file = f"{self.root_dir}/problems/{self.problem}/gpt.py"
+        self.output_file = f"{self.root_dir}/problems/{self.problem}/gpt.txt"
 
         if self.problem_type == "tsp_constructive":
             from .original.prompts.tsp_greedy import GetPrompts
@@ -88,7 +97,7 @@ class Problem:
         runid = hash(code)
         # Write response to file
         file_name = outdir + f"problem_eval{runid}.txt" if file_name is None else file_name + ".txt"
-        with open(file_name, 'w', encoding='utf-8') as file:
+        with open(file_name, 'w', encoding='utf-8', errors='replace') as file:
             file.writelines(code + '\n')
 
         # Extract code and description from response
@@ -97,7 +106,7 @@ class Problem:
 
         individual = {
             "stdout_filepath": std_out_filepath,
-            "code_path": outdir + f"problem_eval{runid}_code.py",
+            "code_path": outdir + f"problem_eval{runid}_code.c",
             "code": code,
             "response_id": response_id,
         }
@@ -134,13 +143,13 @@ class Problem:
             try:
                 logging.debug(f"Iteration {self.iteration}: Processing Code Run {runid}")
 
-                with open(self.output_file, 'w', encoding = 'utf-8') as file:
+                with open(self.output_file, 'w', encoding = 'utf-8', errors='replace') as file:
                     file.writelines(individual["code"] + '\n')
 
                 # Execute the python file with flags
                 with open(individual["stdout_filepath"], 'w') as f:
                     file_path = f'{self.root_dir}/problems/{self.problem}/eval.py' if self.problem_type != "black_box" else f'{self.root_dir}/problems/{self.problem}/eval_black_box.py'
-                    inner_run = process = subprocess.Popen([sys.executable, '-u', file_path, f'{self.problem_size}', self.root_dir, "train"],
+                    inner_run = process = subprocess.Popen([sys.executable, '-u', file_path, str(response_id),  "train"],
                     stdout=f, stderr=f)
                 block_until_running(individual["stdout_filepath"], log_status=True)
                 inner_runs.append(process)

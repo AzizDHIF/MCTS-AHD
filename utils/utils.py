@@ -3,6 +3,35 @@ import re
 import inspect
 import hydra
 
+HEADER_RULES = {
+    'math.h': [
+        'sqrt', 'pow', 'fabs', 'ceil', 'floor', 'fmod', 'exp', 'log',
+        'log2', 'log10', 'sin', 'cos', 'tan', 'atan2', 'round', 'INFINITY', 'NAN',
+    ],
+    'float.h': [
+        'DBL_MAX', 'DBL_MIN', 'FLT_MAX', 'FLT_MIN', 'DBL_EPSILON', 'FLT_EPSILON',
+    ],
+    'limits.h': [
+        'INT_MAX', 'INT_MIN', 'UINT_MAX', 'LONG_MAX', 'LONG_MIN', 'CHAR_MAX',
+    ],
+    'stdlib.h': [
+        'malloc', 'calloc', 'realloc', 'free', 'rand', 'srand', 'abs', 'qsort', 'exit',
+    ],
+    'string.h': [
+        'memset', 'memcpy', 'strcpy', 'strncpy', 'strcmp', 'strncmp', 'strlen', 'strcat',
+    ],
+    'stdio.h': [
+        'printf', 'scanf', 'fprintf', 'sprintf', 'snprintf', 'fopen', 'fclose',
+    ],
+    'stdbool.h': [
+        'bool', 'true', 'false',
+    ],
+    'stdint.h': [
+        'int32_t', 'uint32_t', 'int64_t', 'uint64_t', 'int8_t', 'uint8_t',
+    ],
+}
+
+
 def init_client(cfg):
     global client
     if cfg.get("model", None): # for compatibility
@@ -42,12 +71,19 @@ def block_until_running(stdout_filepath, log_status=False, iter_num=-1, response
     # Ensure that the evaluation has started before moving on
     while True:
         log = file_to_string(stdout_filepath)
-        if  len(log) > 0:
+        lines = [l for l in log.splitlines() if l.strip()]
+        if  len(lines) >= 4:
             if log_status and "Traceback" in log:
                 logging.info(f"Iteration {iter_num}: Code Run {response_id} execution error!")
             else:
                 logging.info(f"Iteration {iter_num}: Code Run {response_id} successful!")
             break
+        if "Traceback" in log:
+            logging.warning(
+                f"Iteration {iter_num}: Code Run {response_id} crashed early!  "
+            )
+            break
+
 
 
 def extract_description(response: str) -> tuple[str, str]:
@@ -89,29 +125,59 @@ def extract_code_from_generator(content):
         code_string = "import torch\n" + code_string
     return code_string
 
+def extract_c_code_from_generator(content):
+    """Extract C heuristic function from the response of the code generator."""
+
+    # 1. Cherche dans un bloc ```c ... ```
+    pattern_code = r'```c(.*?)```'
+    code_string = re.search(pattern_code, content, re.DOTALL)
+    code_string = code_string.group(1).strip() if code_string is not None else None
+
+    if code_string is None:
+        # 2. Cherche la signature de la fonction directement dans le contenu
+        lines = content.split('\n')
+        lines=[l.strip() for l in lines]
+        start = None
+        brace_count = 0
+        end = None
+
+        for i, line in enumerate(lines):
+            # Détecte le début de la fonction via sa signature
+            if 'double heuristic(' in line:
+                start = i
+
+            # Compte les accolades pour trouver la fin du bloc
+            if start is not None:
+                brace_count += line.count('{') - line.count('}')
+                if brace_count == 0 and '{' in '\n'.join(lines[start:i+1]):
+                    end = i
+                    break
+
+        if start is not None and end is not None:
+            code_string = '\n'.join(lines[start:end+1])
+
+    if code_string is None:
+        return None
 
 def filter_code(code_string):
-    """Remove lines containing signature and import statements."""
+    """Remove lines containing signature and include statements."""
     lines = code_string.split('\n')
+    lines=[l.strip() for l in lines]
     filtered_lines = []
-    for line in lines:
-        if line.startswith('def'):
-            continue
-        elif line.startswith('import'):
-            continue
-        elif line.startswith('from'):
-            continue
-        elif line.startswith('return'):
-            filtered_lines.append(line)
+
+    # Enlever les includes
+    lines = [line for line in lines if not line.startswith('#include')]
+
+    # Trouver la première accolade et garder tout ce qui est après
+    first_brace = None
+    for i, line in enumerate(lines):
+        if '{' in line:
+             # Tronquer la ligne pour commencer au '{'
+            lines[i] = line[line.index('{'):]
+            first_brace = i
             break
-        else:
-            filtered_lines.append(line)
-    code_string = '\n'.join(filtered_lines)
-    return code_string
+    
+    if first_brace is not None:
+        filtered_lines = lines[first_brace:]
 
-
-def get_heuristic_name(module, possible_names: list[str]):
-    for func_name in possible_names:
-        if hasattr(module, func_name):
-            if inspect.isfunction(getattr(module, func_name)):
-                return func_name
+    return '\n'.join(filtered_lines)

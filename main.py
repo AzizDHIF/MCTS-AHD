@@ -6,6 +6,8 @@ import subprocess
 from utils.utils import init_client
 from ahd_adapter import AHD as LHH
 import sys
+import yaml 
+import time
 ROOT_DIR = os.getcwd()
 logging.basicConfig(level=logging.INFO)
 
@@ -27,7 +29,7 @@ def main(cfg):
     logging.info(f"Best Code Path Overall: {best_code_path_overall}")
     
     # Run validation and redirect stdout to a file "best_code_overall_stdout.txt"
-    with open(f"{ROOT_DIR}/problems/{cfg.problem.problem_name}/gpt.py", 'w') as file:
+    with open(f"{ROOT_DIR}/problems/{cfg.problem.problem_name}/gpt.txt", 'w') as file:
         file.writelines(best_code_overall + '\n')
     test_script = f"{ROOT_DIR}/problems/{cfg.problem.problem_name}/eval.py"
     test_script_stdout = "best_code_overall_val_stdout.txt"
@@ -37,7 +39,7 @@ def main(cfg):
     logging.info(f"Validation script finished. Results are saved in {test_script_stdout}.")
     
     # Print the results
-    with open(test_script_stdout, 'r') as file:
+    with open(test_script_stdout, 'r',encoding="cp1252") as file:
         for line in file.readlines():
             logging.info(line.strip())
 
