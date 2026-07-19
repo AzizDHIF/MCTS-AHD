@@ -50,18 +50,13 @@ class Evolution():
     # -----------------------------------------------------------
     def _c_instructions(self):
         return (
-            " Write the function in standard C (C99 or later). "
-            "Include any necessary headers with #include at the top of the code block "
-            "(e.g. #include <stdio.h>, #include <stdlib.h>, #include <math.h> as needed). "
-            "Use explicit, appropriate C types for all parameters and the return value "
-            "(e.g. double, int, double*, int*, size_t) consistent with the described inputs and outputs. "
-            "Do not use any language other than C, and do not include a main function unless explicitly asked. "
-            "Wrap the entire code (headers + function) inside a single fenced code block starting with ```c and ending with ```."
+            " Write the C code and nothing else. "
+            'Format your code as a C code string: "```c ... ```".'
         )
 
     def get_prompt_post(self, code, algorithm):
 
-        prompt_content = self.prompt_task + "\n" + "Following is the a Code implementing a heuristic algorithm in C with function name " + self.prompt_func_name + " to solve the above mentioned problem.\n"
+        prompt_content = self.prompt_task + "\n" + "Following is the  Code implementing a heuristic algorithm in C with function name " + self.prompt_func_name + " to solve the above mentioned problem.\n"
         prompt_content += self.prompt_inout_inf + " " + self.prompt_other_inf
         prompt_content += "\n\nCode:\n" + code
         prompt_content += "\n\nNow you should describe the Design Idea of the algorithm using less than 5 sentences.\n"
