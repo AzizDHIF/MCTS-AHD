@@ -9,7 +9,7 @@ WORK_DIR = os.path.dirname(os.path.abspath(__file__))
 
 import re
 
-possible_func_names = ["heuristic", "heuristic_v1", "heuristic_v2", "heuristic_v3"]
+possible_func_names = ["heuristic", "heuristic1", "heuristic2", "heuristic3"]
 population_size=4
 
 def print_hyperlink(path, text=None):

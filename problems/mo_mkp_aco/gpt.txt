@@ -1,19 +1,37 @@
-import numpy as np
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
-def heuristic2(index_item, weights, capacity, nb_voisinage, voisinage, profit):
-    dimension = len(capacity)
-    NBITEMS = len(profit)
-    heuristics_matrix = np.zeros((nb_voisinage + 1, dimension + 1))
-    
-    for i in range(nb_voisinage + 1):
-        if i == 0:
-            item_index = index_item
-        else:
-            item_index = voisinage[i - 1]
-        
-        heuristics = profit[item_index]
-        for d in range(dimension):
-            heuristics_matrix[i, d] = weights[d, item_index] / capacity[d]
-        heuristics_matrix[i, dimension] = heuristics
-    
-    return heuristics_matrix
+#define NBITEMS 100
+#define dimension 10
+
+double heuristic2(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS]) {
+    double heuristics_matrix = 0.0;
+    double max_weight = 0.0;
+    double min_weight = 1e10;
+
+    // Find the maximum and minimum weights for the given item
+    for (int i = 0; i < dimension; i++) {
+        if (weights[i][index_item] > max_weight) {
+            max_weight = weights[i][index_item];
+        }
+        if (weights[i][index_item] < min_weight) {
+            min_weight = weights[i][index_item];
+        }
+    }
+
+    // Calculate the heuristic value
+    heuristics_matrix = profit[index_item] / (max_weight + 1e-10);
+
+    // Consider the neighborhood of the item
+    for (int i = 0; i < nb_voisinage; i++) {
+        int neighbor_index = voisinage[i];
+        for (int j = 0; j < dimension; j++) {
+            if (weights[j][neighbor_index] > capacity[j]) {
+                heuristics_matrix -= 1e-5;
+            }
+        }
+    }
+
+    return heuristics_matrix;
+}
