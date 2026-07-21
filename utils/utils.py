@@ -86,48 +86,11 @@ def block_until_running(stdout_filepath, log_status=False, iter_num=-1, response
 
 
 
-def extract_description(response: str) -> tuple[str, str]:
-    # Regex patterns to extract code description enclosed in GPT response, it starts with ‘<start>’ and ends with ‘<end>’
-    pattern_desc = [r'<start>(.*?)```python', r'<start>(.*?)<end>']
-    for pattern in pattern_desc:
-        desc_string = re.search(pattern, response, re.DOTALL)
-        desc_string = desc_string.group(1).strip() if desc_string is not None else None
-        if desc_string is not None:
-            break
-    return desc_string
 
-
-def extract_code_from_generator(content):
-    """Extract code from the response of the code generator."""
-    pattern_code = r'```python(.*?)```'
-    code_string = re.search(pattern_code, content, re.DOTALL)
-    code_string = code_string.group(1).strip() if code_string is not None else None
-    if code_string is None:
-        # Find the line that starts with "def" and the line that starts with "return", and extract the code in between
-        lines = content.split('\n')
-        start = None
-        end = None
-        for i, line in enumerate(lines):
-            if line.startswith('def'):
-                start = i
-            if 'return' in line:
-                end = i
-                break
-        if start is not None and end is not None:
-            code_string = '\n'.join(lines[start:end+1])
-    
-    if code_string is None:
-        return None
-    # Add import statements if not present
-    if "np" in code_string:
-        code_string = "import numpy as np\n" + code_string
-    if "torch" in code_string:
-        code_string = "import torch\n" + code_string
-    return code_string
 
 def extract_c_code_from_generator(content):
     """Extract C heuristic function from the response of the code generator."""
-
+    
     # 1. Cherche dans un bloc ```c ... ```
     pattern_code = r'```c(.*?)```'
     code_string = re.search(pattern_code, content, re.DOTALL)
@@ -143,9 +106,9 @@ def extract_c_code_from_generator(content):
 
         for i, line in enumerate(lines):
             # Détecte le début de la fonction via sa signature
-            if 'double heuristic(' in line:
+            if 'double heuristics_v2(' in line:
                 start = i
-
+            
             # Compte les accolades pour trouver la fin du bloc
             if start is not None:
                 brace_count += line.count('{') - line.count('}')
@@ -158,6 +121,18 @@ def extract_c_code_from_generator(content):
 
     if code_string is None:
         return None
+
+    # 3. Ajoute les includes nécessaires (détection par mot entier, pas substring)
+    needed_headers = []
+    for header, symbols in HEADER_RULES.items():
+        for symbol in symbols:
+            if re.search(r'\b' + re.escape(symbol) + r'\b', code_string):
+                needed_headers.append(header)
+                break  # un seul symbole trouvé suffit pour ajouter ce header
+
+    includes = '\n'.join(f'#include <{h}>' for h in needed_headers)
+    code_string = '#include "HBACO.h"\n' + (includes + '\n' if includes else '') + code_string
+    return code_string
 
 def filter_code(code_string):
     """Remove lines containing signature and include statements."""

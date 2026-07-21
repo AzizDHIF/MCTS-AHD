@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 @hydra.main(version_base=None, config_path="cfg", config_name="config")
 def main(cfg):
+    start_time = time.perf_counter()
     workspace_dir = Path.cwd()
     # Set logging level
     logging.info(f"Workspace: {workspace_dir}")
@@ -35,13 +36,15 @@ def main(cfg):
     test_script_stdout = "best_code_overall_val_stdout.txt"
     logging.info(f"Running validation script...: {test_script}")
     with open(test_script_stdout, 'w') as stdout:
-        subprocess.run([sys.executable, test_script, "-1", ROOT_DIR, "val"], stdout=stdout)
+        subprocess.run([sys.executable, test_script, "-1",  "val"], stdout=stdout)
+
     logging.info(f"Validation script finished. Results are saved in {test_script_stdout}.")
     
     # Print the results
     with open(test_script_stdout, 'r',encoding="cp1252") as file:
         for line in file.readlines():
             logging.info(line.strip())
-
+    elapsed = time.perf_counter() - start_time  # <-- fin du chrono
+    logging.info(f"Total execution time: {elapsed:.2f} seconds ({elapsed/60:.2f} minutes)")
 if __name__ == "__main__":
     main()

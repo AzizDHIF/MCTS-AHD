@@ -1,37 +1,24 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#define NBITEMS 100
-#define dimension 10
-
-double heuristic(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS]) {
-    double heuristics_matrix = 0.0;
-    double max_weight = 0.0;
-    double min_weight = 1e10;
-
-    // Find the maximum and minimum weights for the given item
-    for (int i = 0; i < dimension; i++) {
-        if (weights[i][index_item] > max_weight) {
-            max_weight = weights[i][index_item];
-        }
-        if (weights[i][index_item] < min_weight) {
-            min_weight = weights[i][index_item];
-        }
-    }
-
-    // Calculate the heuristic value
-    heuristics_matrix = profit[index_item] / (max_weight + 1e-10);
-
-    // Consider the neighborhood of the item
-    for (int i = 0; i < nb_voisinage; i++) {
-        int neighbor_index = voisinage[i];
-        for (int j = 0; j < dimension; j++) {
-            if (weights[j][neighbor_index] > capacity[j]) {
-                heuristics_matrix -= 1e-5;
-            }
-        }
-    }
-
-    return heuristics_matrix;
+#include "HBACO.h"
+double heuristic(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS] ) {
+double max_profit = 0;
+double min_weight = 1e10;
+for (int i = 0; i < nb_voisinage; i++) {
+int item = voisinage[i];
+double total_weight = 0;
+for (int j = 0; j < dimension; j++) {
+total_weight += weights[j][item];
+}
+if (total_weight < min_weight) {
+min_weight = total_weight;
+max_profit = profit[item];
+} else if (total_weight == min_weight && profit[item] > max_profit) {
+max_profit = profit[item];
+}
+}
+double item_weight = 0;
+for (int j = 0; j < dimension; j++) {
+item_weight += weights[j][index_item];
+}
+double heuristic_value = (item_weight < 1) ? profit[index_item] / item_weight : -1;
+return heuristic_value;
 }

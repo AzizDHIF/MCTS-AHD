@@ -3,8 +3,9 @@ import os
 import subprocess
 import re
 import sys
+import traceback
 from typing import List, Any
-from utils.utils import block_until_running, file_to_string, filter_traceback
+from utils.utils import block_until_running, extract_c_code_from_generator, file_to_string, filter_traceback
 
 
 class Prompts:
@@ -61,7 +62,8 @@ class Prompts:
 
     def get_inout_inf(self):
         return self.func_desc
-
+    def get_func_signature(self):
+        return self.func_signature
     def get_other_inf(self):
         return ""
 
@@ -142,15 +144,17 @@ class Problem:
 
             try:
                 logging.debug(f"Iteration {self.iteration}: Processing Code Run {runid}")
-
+                
                 with open(self.output_file, 'w', encoding = 'utf-8', errors='replace') as file:
-                    file.writelines(individual["code"] + '\n')
+                    file.writelines(extract_c_code_from_generator(individual["code"]) + '\n')
 
                 # Execute the python file with flags
                 with open(individual["stdout_filepath"], 'w') as f:
                     file_path = f'{self.root_dir}/problems/{self.problem}/eval.py' if self.problem_type != "black_box" else f'{self.root_dir}/problems/{self.problem}/eval_black_box.py'
+                    
                     inner_run = process = subprocess.Popen([sys.executable, '-u', file_path, str(response_id),  "train"],
                     stdout=f, stderr=f)
+                    
                 block_until_running(individual["stdout_filepath"], log_status=True)
                 inner_runs.append(process)
             except Exception as e:  # If code execution fails
