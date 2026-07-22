@@ -127,6 +127,7 @@ class Problem:
         """
         Evaluate population by running code in parallel and computing objective values and fitness.
         """
+        
         self.iteration = iteration
         population = [self.response_to_individual(resp, index) for index, resp in enumerate(codes)]
         inner_runs = []
