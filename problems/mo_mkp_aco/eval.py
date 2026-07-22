@@ -396,24 +396,18 @@ if __name__ == "__main__":
             print(mean_hypervolume)
 
         finally:
-            #Supprimer les dossiers de sets de pareto temporaire
-            for i in range(5):
-                try:
-                    delete_folder(os.path.join(WORK_DIR,f"{id_response}\\pareto_set\\pareto_sets_dataset_{i}"))
-                except Exception as e:
-                    logging.warning(f"Failed to delete pareto_sets_dataset_{i}: {e}")
-                #Supprimer les fichiers de résultats intermédiaires de l'ACO
-                try:
-                    delete_file(os.path.join(WORK_DIR,f"{id_response}\\results_train_dataset_{i}.txt"))
-                except Exception as e:
-                    logging.warning(f"Failed to delete results_train_dataset_{i}.txt: {e}")
+      
                 
-            for i in range(population_size):
-                try:
-                    delete_folder(os.path.join(WORK_DIR,f"results_individual_{i}"))
-                except Exception as e:
-                    logging.warning(f"Failed to delete results_individual_{i}: {e}")
-
+            
+            try:
+                    delete_folder(os.path.join(WORK_DIR,id_response))
+            except Exception as e:
+                    logging.warning(f"Failed to delete {id_response} : {e}")
+            
+            try:
+                    delete_file(os.path.join(WORK_DIR,f"WeightACO_train_100items_{id_response}.exe"))
+            except Exception as e:
+                    logging.warning(f"Failed to delete WeightACO_train_100items_{id_response}.exe: {e}")
 
    
     #mood = val:
@@ -518,13 +512,15 @@ if __name__ == "__main__":
                 except Exception as e:
                     logging.warning(f"Failed to delete {result_file}: {e}")
 
+            
+            
             for i in range(population_size):
-                try: delete_folder(os.path.join(WORK_DIR,f"results_individual_{i}")) 
-                except Exception as e:
-                    logging.warning(f"Failed to delete results_individual_{i}: {e}")
-        
-        
+                for nb_items in [100,300]:
+                    try:
+                        delete_file(os.path.join(WORK_DIR,f"WeightACO_eval_{nb_items}items.exe"))
+                    except Exception as e:
+                        logging.warning(f"Failed to delete WeightACO_eval_{nb_items}items.exe: {e}")
 
-        
+            
 
 

@@ -1,16 +1,21 @@
-#include "HBACO.h"
 double heuristics_v2(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS] ) {
-double total_weight = 0.0;
-for (int d = 0; d < dimension; d++) {
-total_weight += weights[d][index_item];
-for (int i = 0; i < nb_voisinage; i++) {
-total_weight += weights[d][voisinage[i]];
-}
-}
-double remaining_capacity = 1.0;
-for (int d = 0; d < dimension; d++) {
-remaining_capacity = remaining_capacity * capacity[d];
-}
-double heuristic_value = (total_weight > 0.0) ? (profit[index_item] / total_weight) * remaining_capacity : 0.0;
-return heuristic_value;
+    double sum_weights = 0.0;
+    for (int i = 0; i < dimension; i++) {
+        sum_weights += weights[i][index_item];
+    }
+    double average_weight = sum_weights / dimension;
+    double max_profit = -1.0;
+    for (int i = 0; i < nb_voisinage; i++) {
+        if (profit[voisinage[i]] > max_profit) {
+            max_profit = profit[voisinage[i]];
+        }
+    }
+    double heuristic_value = max_profit / (average_weight + 1);
+    for (int i = 0; i < dimension; i++) {
+        if (weights[i][index_item] > capacity[i]) {
+            heuristic_value = -1.0;
+            break;
+        }
+    }
+    return heuristic_value;
 }
