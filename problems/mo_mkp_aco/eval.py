@@ -426,7 +426,6 @@ if __name__ == "__main__":
 
         finally:
             #Supprimer les dossiers de sets de pareto temporaire
-            print("[*] Suppression des dossiers de sets de pareto intermédiaires...")
             for i in range(5):
                 delete_folder(os.path.join(WORK_DIR,f"{id_response}\\pareto_set\\pareto_sets_dataset_{i}"))
                 #Supprimer les fichiers de résultats intermédiaires de l'ACO
