@@ -1,21 +1,29 @@
-double heuristic_eval_100(int index_item, double weights[dimension][NBITEMS_100], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS_100], double profit[NBITEMS_100] ) {
-    double sum_weights = 0.0;
-    for (int i = 0; i < dimension; i++) {
-        sum_weights += weights[i][index_item];
-    }
-    double average_weight = sum_weights / dimension;
-    double max_profit = -1.0;
-    for (int i = 0; i < nb_voisinage; i++) {
-        if (profit[voisinage[i]] > max_profit) {
-            max_profit = profit[voisinage[i]];
-        }
-    }
-    double heuristic_value = max_profit / (average_weight + 1);
-    for (int i = 0; i < dimension; i++) {
-        if (weights[i][index_item] > capacity[i]) {
-            heuristic_value = -1.0;
-            break;
-        }
-    }
-    return heuristic_value;
+#include "HBACO.h"
+double heuristic(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS] )
+{
+double total_profit = profit[index_item];
+double total_weight[dimension] = {0};
+for (int i = 0; i < dimension; i++) {
+total_weight[i] += weights[i][index_item];
+}
+for (int i = 0; i < nb_voisinage; i++) {
+int neighbor = voisinage[i];
+total_profit += profit[neighbor];
+for (int j = 0; j < dimension; j++) {
+total_weight[j] += weights[j][neighbor];
+if (total_weight[j] > capacity[j]) {
+return -1e10;
+}
+}
+}
+double min_ratio = 1e10;
+for (int i = 0; i < dimension; i++) {
+if (total_weight[i] > 0) {
+double ratio = total_profit / total_weight[i];
+if (ratio < min_ratio) {
+min_ratio = ratio;
+}
+}
+}
+return min_ratio;
 }

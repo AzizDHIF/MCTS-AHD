@@ -63,7 +63,7 @@ def compile(c_file_name,exe_file_name):
     result=subprocess.run(run_cmd,cwd=WORK_DIR)
 
     if result.returncode!=0:
-        raise("Erreur de compilation")
+        raise RuntimeError("Erreur de compilation")
     
 def remove_empty_line(path_file_txt):
     """
@@ -276,6 +276,20 @@ def calculate_meanEpsilon(files, pareto_ref_files):
 
     return mean 
 
+def vider_dossier(dossier_path):
+    """Vide un dossier de tout son contenu (fichiers et sous-dossiers) sans le supprimer lui-même."""
+    if not os.path.isdir(dossier_path):
+        return  # le dossier n'existe pas, rien à faire
+
+    for nom in os.listdir(dossier_path):
+        chemin = os.path.join(dossier_path, nom)
+        try:
+            if os.path.isfile(chemin) or os.path.islink(chemin):
+                os.remove(chemin)
+            elif os.path.isdir(chemin):
+                shutil.rmtree(chemin)
+        except Exception as e:
+            print(f"Impossible de supprimer {chemin} : {e}")
 
 def delete_folder(folder_path):
     if os.path.isdir(folder_path):
@@ -345,7 +359,7 @@ if __name__ == "__main__":
     if mood == 'train':
         try:
             id_response=f"results_individual_{sys.argv[1]}"
-
+            vider_dossier(os.path.join(WORK_DIR,id_response))
             aco_results=[(os.path.join(WORK_DIR,f"{id_response}\\results_train_dataset_0.txt"), os.path.join(WORK_DIR,f"{id_response}\\pareto_set\\pareto_sets_dataset_0")),
                     (os.path.join(WORK_DIR,f"{id_response}\\results_train_dataset_1.txt"), os.path.join(WORK_DIR,f"{id_response}\\pareto_set\\pareto_sets_dataset_1")),
                     (os.path.join(WORK_DIR,f"{id_response}\\results_train_dataset_2.txt"), os.path.join(WORK_DIR,f"{id_response}\\pareto_set\\pareto_sets_dataset_2")),
@@ -514,13 +528,17 @@ if __name__ == "__main__":
 
             
             
-            for i in range(population_size):
-                for nb_items in [100,300]:
-                    try:
-                        delete_file(os.path.join(WORK_DIR,f"WeightACO_eval_{nb_items}items.exe"))
-                    except Exception as e:
-                        logging.warning(f"Failed to delete WeightACO_eval_{nb_items}items.exe: {e}")
+            
+            for nb_items in [100,300]:
+                try:
+                    delete_file(os.path.join(WORK_DIR,f"WeightACO_eval_{nb_items}items.exe"))
+                except Exception as e:
+                    logging.warning(f"Failed to delete WeightACO_eval_{nb_items}items.exe: {e}")
 
+            for i in range(population_size):
+               
+                delete_folder(os.path.join(WORK_DIR,f"results_individual_{i}"))
+                delete_file(os.path.join(WORK_DIR,f"WeightACO_train_100items_results_individual_{i}.exe"))
             
 
 
