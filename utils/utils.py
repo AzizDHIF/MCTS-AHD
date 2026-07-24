@@ -71,12 +71,13 @@ def block_until_running(stdout_filepath, log_status=False, iter_num=-1, response
     # Ensure that the evaluation has started before moving on
     while True:
         log = file_to_string(stdout_filepath)
-        lines = [l for l in log.splitlines() if l.strip()]
-        if  len(lines) >= 4:
+    
+        if "[*] Running ACO on training datasets..." in log:
+    
             if log_status and "Traceback" in log:
                 logging.info(f"Iteration {iter_num}: Code Run {response_id} execution error!")
             else:
-                logging.info(f"Iteration {iter_num}: Code Run {response_id} successful!")
+                logging.info(f"Iteration {iter_num}: Code Run {response_id} started")
             break
         if "Traceback" in log:
             logging.warning(

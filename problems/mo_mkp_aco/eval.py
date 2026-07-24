@@ -411,8 +411,6 @@ if __name__ == "__main__":
 
         finally:
       
-                
-            
             try:
                     delete_folder(os.path.join(WORK_DIR,id_response))
             except Exception as e:
