@@ -147,7 +147,7 @@ class Problem:
                 logging.debug(f"Iteration {self.iteration}: Processing Code Run {runid}")
                 
                 with open(self.output_file, 'w', encoding = 'utf-8', errors='replace') as file:
-                    file.writelines(extract_c_code_from_generator(individual["code"]) + '\n')
+                    file.writelines(individual["code"] + '\n')
 
                 # Execute the python file with flags
                 with open(individual["stdout_filepath"], 'w') as f:
