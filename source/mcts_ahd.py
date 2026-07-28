@@ -196,3 +196,73 @@ class MCTS_AHD:
                 json.dump(nodes_set[0], f, indent=5)
 
         return nodes_set[0]["code"], filename
+
+    def greedy_run(self):
+        print("- Initialization Start -")
+
+        interface_prob = self.prob
+
+        # interface for ec operators
+        self.interface_ec = InterfaceEC(self.m, self.api_endpoint, self.api_key, self.llm_model,
+                                        self.debug_mode, interface_prob, use_local_llm=self.use_local_llm, url=self.url,
+                                        select=self.select, n_p=self.exp_n_proc,
+                                        timeout=self.timeout, use_numba=self.use_numba
+                                        )
+
+        brothers = []
+        mcts = MCTS('Root')
+        # main loop
+        n_op = len(self.operators)
+        self.eval_times, brothers, offsprings = self.interface_ec.get_algorithm(self.eval_times, brothers, "i1")
+        brothers.append(offsprings)
+        nownode = MCTSNode(offsprings['algorithm'], offsprings['code'], offsprings['objective'], parent=mcts.root,
+                           depth=1, visit=1, Q=-1 * offsprings['objective'], raw_info=offsprings)
+        mcts.root.add_child(nownode)
+        mcts.root.children_info.append(offsprings)
+        mcts.backpropagate(nownode)
+        nownode.subtree.append(nownode)
+        for i in range(1, self.init_size):
+            self.eval_times, brothers, offsprings = self.interface_ec.get_algorithm(self.eval_times, brothers, "e1")
+            brothers.append(offsprings)
+            nownode = MCTSNode(offsprings['algorithm'], offsprings['code'], offsprings['objective'], parent=mcts.root,
+                               depth=1, visit=1, Q=-1 * offsprings['objective'], raw_info=offsprings)
+            mcts.root.add_child(nownode)
+            mcts.root.children_info.append(offsprings)
+            mcts.backpropagate(nownode)
+            nownode.subtree.append(nownode)
+        nodes_set = brothers
+        size_act = min(len(nodes_set), self.pop_size)
+        nodes_set = self.manage.population_management(nodes_set, size_act)
+        print("- Initialization Finished - Evolution Start -")
+
+        while self.eval_times < self.fe_max:
+            print(f"Current performances of MCTS nodes: {mcts.rank_list}")
+            cur_node = mcts.root
+
+   
+            while len(cur_node.children) > 0 and cur_node.depth < mcts.max_depth:
+                rewards = [child.reward for child in cur_node.children]
+                best_idx = rewards.index(max(rewards))
+                cur_node = cur_node.children[best_idx]
+
+            # ---- Expansion au nœud sélectionné ----
+            for i in range(n_op):
+                op = self.operators[i]
+                print(f"Iter: {self.eval_times}/{self.fe_max} OP: {op}", end="|")
+                op_w = self.operator_weights[i]
+                for j in range(op_w):
+                    nodes_set = self.expand(mcts, cur_node, nodes_set, op)
+                assert len(cur_node.children) == len(cur_node.children_info)
+
+            # Save population to a file
+            filename = self.output_path + "population_generation_" + str(self.eval_times) + ".json"
+            with open(filename, 'w') as f:
+                json.dump(nodes_set, f, indent=5)
+
+            # Save the best one to a file
+            filename = self.output_path + "best_population_generation_" + str(self.eval_times) + ".json"
+            with open(filename, 'w') as f:
+                json.dump(nodes_set[0], f, indent=5)
+
+        return nodes_set[0]["code"], filename
+            

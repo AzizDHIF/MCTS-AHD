@@ -27,7 +27,7 @@ class AHD:
 
         method = MCTS_AHD(self.paras, self.problem, prob_rank, pop_greedy)
 
-        results = method.run()
+        results = method.greedy_run()
 
         print("> End of Evolution! ")
         print("-----------------------------------------")

@@ -1,29 +1,13 @@
-#include "HBACO.h"
-double heuristics_v2(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS] )
-{
-double total_profit = profit[index_item];
-double total_weight[dimension] = {0};
-for (int i = 0; i < dimension; i++) {
-total_weight[i] += weights[i][index_item];
-}
-for (int i = 0; i < nb_voisinage; i++) {
-int neighbor = voisinage[i];
-total_profit += profit[neighbor];
-for (int j = 0; j < dimension; j++) {
-total_weight[j] += weights[j][neighbor];
-if (total_weight[j] > capacity[j]) {
-return -1e10;
-}
-}
-}
-double min_ratio = 1e10;
-for (int i = 0; i < dimension; i++) {
-if (total_weight[i] > 0) {
-double ratio = total_profit / total_weight[i];
-if (ratio < min_ratio) {
-min_ratio = ratio;
-}
-}
-}
-return min_ratio;
+{ The design idea and main steps of the algorithm involve calculating a heuristic value for each item based on its profit and the remaining capacity of the knapsacks, with the goal of selecting items that maximize profit while not exceeding capacity, and main steps include calculating the total weight of the item, checking if including the item exceeds the capacity, and calculating the heuristic value based on the profit and weight of the item. }
+double heuristics_v2(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS] ) {
+    double total_weight = 0;
+    for (int i = 0; i < dimension; i++) {
+        total_weight += weights[i][index_item];
+    }
+    if (total_weight > 1) {
+        return -1;
+    }
+    double remaining_capacity = 1 - total_weight;
+    double heuristic_value = profit[index_item] / total_weight;
+    return heuristic_value;
 }
