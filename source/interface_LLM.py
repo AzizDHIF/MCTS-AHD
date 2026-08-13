@@ -3,6 +3,8 @@ import logging
 
 
 class InterfaceAPI:
+    _total_calls = 0
+    
     def __init__(self, api_endpoint, api_key, model_LLM, debug_mode):
         self.api_endpoint = api_endpoint
         self.api_key = api_key
@@ -23,6 +25,13 @@ class InterfaceAPI:
         logging.info(
             "=== REPONSE LLM ===\n%s\n=== FIN REPONSE ===",
             ret
+        )
+
+        InterfaceAPI._total_calls += 1
+
+        logging.info(
+            "=== TOTAL CALLS LLM ===\n%s\n=== FIN TOTAL CALLS ===",
+            InterfaceAPI._total_calls
         )
 
         return ret

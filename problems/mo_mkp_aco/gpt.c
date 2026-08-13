@@ -1,13 +1,27 @@
-{ The design idea and main steps of the algorithm involve calculating a heuristic value for each item based on its profit and the remaining capacity of the knapsacks, with the goal of selecting items that maximize profit while not exceeding capacity, and main steps include calculating the total weight of the item, checking if including the item exceeds the capacity, and calculating the heuristic value based on the profit and weight of the item. }
-double heuristic(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS] ) {
-    double total_weight = 0;
-    for (int i = 0; i < dimension; i++) {
-        total_weight += weights[i][index_item];
+double heuristic(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS]) {
+    double item_weight_sum = 0.0;
+    int feasible = 1;
+    for (int d = 0; d < dimension; d++) {
+        if (weights[d][index_item] > capacity[d]) {
+            feasible = 0;
+            break;
+        }
+        item_weight_sum += weights[d][index_item];
     }
-    if (total_weight > 1) {
-        return -1;
+    if (!feasible) return 0.0;
+    
+    double item_ratio = profit[index_item] / (1.0 + item_weight_sum);
+    double neighbor_sum = 0.0;
+    for (int i = 0; i < nb_voisinage; i++) {
+        int n_idx = voisinage[i];
+        double n_weight = 0.0;
+        for (int d = 0; d < dimension; d++) {
+            n_weight += weights[d][n_idx];
+        }
+        neighbor_sum += profit[n_idx] / (1.0 + n_weight);
     }
-    double remaining_capacity = 1 - total_weight;
-    double heuristic_value = profit[index_item] / total_weight;
-    return heuristic_value;
+    if (nb_voisinage > 0) {
+        item_ratio += 0.5 * (neighbor_sum / (double)nb_voisinage);
+    }
+    return item_ratio;
 }
