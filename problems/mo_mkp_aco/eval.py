@@ -505,7 +505,7 @@ if __name__ == "__main__":
                 dest_dir=RUN_DIR
             )
 
-            print("[*] Average for hypervolume et  epsilon:")
+            print("[*] Average for hypervolume and  epsilon:")
             
             print(f"[*] Average for hypervolume for dataset 100 items: {mean_hypervolume_100items}")
             print(f"[*] Average for epsilon for dataset 100 items: {mean_epsilon_100items}")
