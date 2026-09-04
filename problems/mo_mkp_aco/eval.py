@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 import sys
 import os
 import logging
@@ -9,7 +10,7 @@ WORK_DIR = os.path.dirname(os.path.abspath(__file__))
 
 import re
 
-possible_func_names = ["heuristics_v2", "heuristics_v3", "heuristics_v4", "heuristic_v5"]
+possible_func_names = ["heuristic"]
 population_size=4
 
 def print_hyperlink(path, text=None):
@@ -35,6 +36,7 @@ def write_heuristic_train(input_txt_path: str, output_c_path: str) -> None:
         )
 
     with open(output_c_path, 'w', encoding='utf-8') as f:
+        f.write('#include "HBACO.h" \n')
         f.write(new_content)
 
 
@@ -55,6 +57,7 @@ def write_heuristic_eval(input_txt_path: str, output_c_path: str,nbitems: str) -
         
     new_content,count=re.subn(pattern_2,f'NBITEMS_{nbitems}',new_content)
     with open(output_c_path, 'w', encoding='utf-8') as f:
+        f.write('#include "HBACO.h" \n')
         f.write(new_content)
 
 def compile(c_file_name,exe_file_name):
@@ -395,7 +398,7 @@ if __name__ == "__main__":
             #concaténer les sets de pareto extraits pour chaque dataset
 
             for pareto_dir in pareto_set_dirs:
-                concatenate_pareto_sets(pareto_dir,1)
+                concatenate_pareto_sets(pareto_dir,3)
             
             print("[*] Calculating  hypervolume and epsilon...")
             #calcul des deux métriques epsilon et hypervolume
@@ -482,7 +485,7 @@ if __name__ == "__main__":
             #concaténer les sets de pareto extraits pour chaque dataset
 
             for _,pareto_dir in val_aco_results:
-                concatenate_pareto_sets(pareto_dir,1)
+                concatenate_pareto_sets(pareto_dir,3)
             
             print("[*] Calculating  hypervolume and epsilon...")
             #calcul des deux métriques epsilon et hypervolume

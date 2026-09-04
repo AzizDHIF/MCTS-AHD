@@ -79,7 +79,7 @@ class Evolution():
 
     def get_prompt_i1(self):
 
-        prompt_content = self.prompt_task + "\n" + "First, describe the design idea and main steps of your algorithm in one sentence. " + "The description must be inside a brace outside the code implementation. Next, implement it in C as a function named \
+        prompt_content = self.prompt_task + "\n" + "First, describe the design idea and main steps of your algorithm in one sentence. " + "The description must be inside /*  */ outside the code implementation. Next, implement it in C as a function named \
 '" + self.prompt_func_name  +  "\n" +self._c_instructions() + "\n" + "Do not give additional explanations."
         return prompt_content
 
@@ -96,7 +96,7 @@ class Evolution():
             len(indivs)) + " existing algorithms with their codes as follows: \n\n" \
                          + prompt_indiv + \
                          "Please create a new algorithm that has a totally different form from the given algorithms. Try generating codes with different structures, flows or algorithms. The new algorithm should have a relatively low objective value. \n" \
-                         "First, describe the design idea and main steps of your algorithm in one sentence. The description must be inside a brace outside the code implementation. Next, implement it in C as a function named \
+                         "First, describe the design idea and main steps of your algorithm in one sentence. The description must be inside /*  */ outside the code implementation. Next, implement it in C as a function named \
 '" + self.prompt_func_name +  "\n" + self._c_instructions() + "\n" + "Do not give additional explanations."
         return prompt_content
 
@@ -114,7 +114,7 @@ class Evolution():
                          + prompt_indiv + \
                          f"Please create a new algorithm that has a similar form to the No.{len(indivs)} algorithm and is inspired by the No.{1} algorithm. The new algorithm should have a objective value lower than both algorithms.\n" \
                          f"Firstly, list the common ideas in the No.{1} algorithm that may give good performances. Secondly, based on the common idea, describe the design idea based on the No.{len(indivs)} algorithm and main steps of your algorithm in one sentence. \
-The description must be inside a brace. Thirdly, implement it in C as a function named \
+The description must be inside a /*  */. Thirdly, implement it in C as a function named \
 '" + self.prompt_func_name + "\n" + self._c_instructions() + "\n" + "Do not give additional explanations."
         return prompt_content
 
@@ -126,7 +126,7 @@ Code:\n\
 " + indiv1['code'] + "\n\
 Please create a new algorithm that has a different form but can be a modified version of the provided algorithm. Attempt to introduce more novel mechanisms and new equations or programme segments.\n" \
                      "First, describe the design idea based on the provided algorithm and main steps of the new algorithm in one sentence. \
-The description must be inside a brace outside the code implementation. Next, implement it in C as a function named \
+The description must be inside a /*  */ outside the code implementation. Next, implement it in C as a function named \
 '" + self.prompt_func_name +  "\n" + self._c_instructions() + "\n" + "Do not give additional explanations."
         return prompt_content
 
@@ -138,7 +138,7 @@ Code:\n\
 " + indiv1['code'] + "\n\
 Please identify the main algorithm parameters and help me in creating a new algorithm that has different parameter settings to equations compared to the provided algorithm. \n" \
                      "First, describe the design idea based on the provided algorithm and main steps of the new algorithm in one sentence. \
-The description must be inside a brace outside the code implementation. Next, implement it in C as a function named \
+The description must be inside a /*  */ outside the code implementation. Next, implement it in C as a function named \
 '" + self.prompt_func_name +  "\n" + self._c_instructions() + "\n" + "Do not give additional explanations."
         return prompt_content
 
@@ -156,7 +156,7 @@ The description must be inside a brace outside the code implementation. Next, im
                          + prompt_indiv + \
                          f"Please help me create a new algorithm that is inspired by all the above algorithms with its objective value lower than any of them.\n" \
                          "Firstly, list some ideas in the provided algorithms that are clearly helpful to a better algorithm. Secondly, based on the listed ideas, describe the design idea and main steps of your new algorithm in one sentence. \
-The description must be inside a brace. Thirdly, implement it in C as a function named \
+The description must be inside a /*  */. Thirdly, implement it in C as a function named \
 '" + self.prompt_func_name + "\n" + self._c_instructions() + "\n" + "Do not give additional explanations."
         return prompt_content
 
@@ -170,9 +170,9 @@ The description must be inside a brace. Thirdly, implement it in C as a function
     # Priority 1: a fenced ```c ... ``` (or plain ``` ... ```) code block, since the
     #             prompts now explicitly ask for one -- this is by far the most
     #             reliable signal and avoids relying on Python-only tokens.
-    # Priority 2: fall back to locating the code by brace-matching, starting from
+    # Priority 2: fall back to locating the code by /*  */-matching, starting from
     #             the first '#include' (or, failing that, the function's own
-    #             signature) and matching C braces { } instead of assuming the
+    #             signature) and matching C /*  */s { } instead of assuming the
     #             function ends with a 'return' statement (untrue in C: a function
     #             can be void, can return earlier than the final line, etc.).
     # -----------------------------------------------------------

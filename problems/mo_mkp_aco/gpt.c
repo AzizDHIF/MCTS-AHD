@@ -1,27 +1,24 @@
-double heuristic(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS]) {
-    double item_weight_sum = 0.0;
-    int feasible = 1;
+#include "HBACO.h" 
+/* The algorithm evaluates the potential inclusion of an item by calculating a weighted profit score based on its profit and assessing the weight of each neighbor's item to ensure compatibility with capacity constraints, where closer neighbors have a higher influence on the total score. */
+double heuristic_eval_300(int index_item, double weights[dimension][NBITEMS_300], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS_300], double profit[NBITEMS_300]) {
+    double total_weight = 0.0;
+    double weighted_profit = profit[index_item]; // Start with the profit of the main item
+
+    // Calculate the total weight considering the item and its neighbors
     for (int d = 0; d < dimension; d++) {
-        if (weights[d][index_item] > capacity[d]) {
-            feasible = 0;
-            break;
-        }
-        item_weight_sum += weights[d][index_item];
+        total_weight += weights[d][index_item];
     }
-    if (!feasible) return 0.0;
-    
-    double item_ratio = profit[index_item] / (1.0 + item_weight_sum);
-    double neighbor_sum = 0.0;
+
+    // Assessing neighbors
     for (int i = 0; i < nb_voisinage; i++) {
-        int n_idx = voisinage[i];
-        double n_weight = 0.0;
-        for (int d = 0; d < dimension; d++) {
-            n_weight += weights[d][n_idx];
-        }
-        neighbor_sum += profit[n_idx] / (1.0 + n_weight);
+        int neighbor_index = voisinage[i];
+        total_weight += weights[0][neighbor_index]; // Assuming single capacity dimension of 1
+        weighted_profit += profit[neighbor_index] * 0.5; // Lower weight on neighbor profit
     }
-    if (nb_voisinage > 0) {
-        item_ratio += 0.5 * (neighbor_sum / (double)nb_voisinage);
+
+    // Check if the total weight exceeds capacity, return appropriate score
+    if (total_weight <= capacity[0]) {
+        return weighted_profit; // Return the accumulated weighted profit
     }
-    return item_ratio;
+    return 0.0; // Return 0.0 if exceeding capacity
 }

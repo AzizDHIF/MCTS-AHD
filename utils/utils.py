@@ -72,7 +72,7 @@ def block_until_running(stdout_filepath, log_status=False, iter_num=-1, response
     while True:
         log = file_to_string(stdout_filepath)
     
-        if "[*] Running ACO on training datasets..." in log:
+        if "[*] Extracting Pareto sets from ACO results..." in log:
     
             if log_status and "Traceback" in log:
                 logging.info(f"Iteration {iter_num}: Code Run {response_id} execution error!")
