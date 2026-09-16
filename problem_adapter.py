@@ -153,7 +153,7 @@ class Problem:
                 with open(individual["stdout_filepath"], 'w') as f:
                     file_path = f'{self.root_dir}/problems/{self.problem}/eval.py' if self.problem_type != "black_box" else f'{self.root_dir}/problems/{self.problem}/eval_black_box.py'
                     
-                    inner_run = process = subprocess.Popen([sys.executable, '-u', file_path, str(response_id),  "train"],
+                    inner_run = process = subprocess.Popen([sys.executable, '-u', file_path, str(response_id),  "train",self.config.metric],
                     stdout=f, stderr=f)
                     
                 block_until_running(individual["stdout_filepath"], log_status=True)

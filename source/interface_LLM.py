@@ -33,5 +33,7 @@ class InterfaceAPI:
             "=== TOTAL CALLS LLM ===\n%s\n=== FIN TOTAL CALLS ===",
             InterfaceAPI._total_calls
         )
+        if InterfaceAPI._total_calls >= 150:
+            raise Exception("Total calls to LLM exceeded 150. Please check your code for potential infinite loops or excessive calls.")
 
         return ret

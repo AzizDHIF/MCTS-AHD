@@ -36,7 +36,7 @@ def main(cfg):
     test_script_stdout = "best_code_overall_val_stdout.txt"
     logging.info(f"Running validation script...: {test_script}")
     start_time_eval = time.perf_counter() 
-    with open(test_script_stdout, 'w') as stdout:
+    with open(test_script_stdout, 'w', encoding="utf-8") as stdout:
         subprocess.run([sys.executable, test_script, "-1",  "val"], stdout=stdout)
     elapsed_eval = time.perf_counter() - start_time_eval  # <-- fin du chrono
     logging.info(f"execution time for evaluation : {elapsed_eval:.2f} seconds ({elapsed_eval/60:.2f} minutes)")

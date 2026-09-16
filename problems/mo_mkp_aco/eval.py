@@ -407,10 +407,14 @@ if __name__ == "__main__":
             mean_hypervolume=calculate_meanHypervolume(pareto_set_files)
             ##epsilon
             mean_epsilon=calculate_meanEpsilon(pareto_set_files,pareto_ref_files)
-            
-            print("[*] moyenne pour hypervolume :")
-            
-            print(mean_hypervolume)
+            metric=sys.argv[3]
+            assert metric in ["hypervolume", "epsilon"], f"Metric {metric} is not supported. Choose 'hypervolume' or 'epsilon'."
+            if metric=="hypervolume":
+                print("[*] moyenne pour hypervolume :")
+                print(mean_hypervolume)
+            else:
+                print("[*] moyenne pour epsilon :")
+                print(mean_epsilon)
 
         finally:
       
