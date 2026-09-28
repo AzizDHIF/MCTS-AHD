@@ -57,6 +57,7 @@ class Evolution():
             f"{self.prompt_inout_inf} \n " 
             " Write only the function in standard C . "
             f"Respect this signature:  {self.func_signature}. "
+            "Constrain the LLM explicitly: state the required complexity bound (e.g. \"O(dimension) only, no loops over NBITEMS, no sorting, no dynamic allocation, no recursion\")"
             "Wrap the entire code inside a single fenced code block starting with ```c and ending with ```."
         )
 

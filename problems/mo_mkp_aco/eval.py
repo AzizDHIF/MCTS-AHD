@@ -522,7 +522,12 @@ if __name__ == "__main__":
 
             #print(f"[*] Average for hypervolume for dataset 500 items: {mean_hypervolume_500items}")
             #print(f"[*] Average for epsilon for dataset 500 items: {mean_epsilon_500items}")
-
+            
+            logging.info(f"[*] Average for hypervolume for dataset 100 items: {mean_hypervolume_100items}")
+            logging.info(f"[*] Average for epsilon for dataset 100 items: {mean_epsilon_100items}")
+            
+            logging.info(f"[*] Average for hypervolume for dataset 300 items: {mean_hypervolume_300items}")
+            logging.info(f"[*] Average for epsilon for dataset 300 items: {mean_epsilon_300items}")
 
         finally:
             delete_folder(os.path.join(WORK_DIR, "pareto_set_val"))

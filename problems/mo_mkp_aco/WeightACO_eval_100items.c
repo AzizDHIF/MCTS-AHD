@@ -18,9 +18,15 @@
  #define M_PI 3.14159265358979323846
 #endif
 
-double capacities[dimension];
-double weights[dimension][NBITEMS_100];
-double profits[dimension][NBITEMS_100];
+int dimension;                 // défini ici, alloué dynamiquement plus tard
+
+double *capacities = NULL;
+double **weights = NULL;
+double **profits = NULL;
+double *referencePoint = NULL;
+double *eta = NULL;
+double *vector_weight = NULL;
+double **OBJ_Weights = NULL;
 
 int nf,ni,cardP;
 int nombr;
@@ -38,14 +44,14 @@ int maxcycle=800;
 /*double tmin=0.5;*/
 double tmax=1.0 , beta=10.0;
 int tinit=1;
-double referencePoint[dimension];
+
 
  ///////////*************
 
 
 int bruit_rate=10;
 double pheromone[NBITEMS_100];
-double eta[dimension];
+
 int inter;
 int iseed;
 
@@ -63,40 +69,47 @@ pop *P=NULL;
 
 float rho ;  /* determines the reference point for the hypervolume indicator */
 FILE *Wfile;
-double vector_weight[dimension];
 int dim;
 int problem_size;
-double OBJ_Weights[dimension][10000];
 int nombreLIGNE=0;
 int nextLn=0;
 int inv=0;
 
 void loadMOKP(char *s){
-
   FILE* source;
-
-int i,f;
-
+  int i,f;
   char cl[20];
 
-  // Opening
-   source=fopen(s,"r");
+  source = fopen(s,"r");
+  fscanf(source, " %d %d  \n", &nf, &ni);
+  printf(" %d %d  \n ", nf, ni);
 
-  fscanf(source, " %d %d  \n", &nf,&ni);
-  printf( " %d %d  \n ", nf,ni);
+  dimension = nf;   // <-- clé : dimension suit maintenant nf
 
-  for (f=0;f<nf;f++)
-	{	fscanf(source, "%lf  \n ",&capacities[f]);
-		/*printf( " %lf  \n \n", capacities[f]);*/
+  capacities   = malloc(dimension * sizeof(double));
+  weights      = malloc(dimension * sizeof(double*));
+  profits      = malloc(dimension * sizeof(double*));
+  referencePoint = malloc(dimension * sizeof(double));
+  eta            = malloc(dimension * sizeof(double));
+  vector_weight  = malloc(dimension * sizeof(double));
+  OBJ_Weights    = malloc(dimension * sizeof(double*));
 
-		for (i=0;i<ni;i++)
-		{
-			fscanf(source, " %s \n", cl); /*printf( " %s  \n \n", cl);*/
-			fscanf(source, " %lf  \n", &weights[f][i]); /*printf( " %d \n \n", weights[f][i]);*/
-			fscanf(source, "  %lf  \n ", &profits[f][i]); /*printf( " %d \n \n", profits[f][i]);*/
+  for (f = 0; f < dimension; f++) {
+      weights[f]     = malloc(ni    * sizeof(double));
+      profits[f]     = malloc(ni    * sizeof(double));
+      OBJ_Weights[f] = malloc(10000 * sizeof(double));
+  }
 
-		}
-	}
+  for (f=0; f<nf; f++)
+  {
+      fscanf(source, "%lf  \n ", &capacities[f]);
+      for (i=0; i<ni; i++)
+      {
+          fscanf(source, " %s \n", cl);
+          fscanf(source, " %lf  \n", &weights[f][i]);
+          fscanf(source, "  %lf  \n ", &profits[f][i]);
+      }
+  }
   fclose(source);
 }
 

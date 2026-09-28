@@ -2,7 +2,7 @@ import logging
 import re
 import inspect
 import hydra
-
+import os 
 HEADER_RULES = {
     'math.h': [
         'sqrt', 'pow', 'fabs', 'ceil', 'floor', 'fmod', 'exp', 'log',
@@ -157,3 +157,439 @@ def filter_code(code_string):
         filtered_lines = lines[first_brace:]
 
     return '\n'.join(filtered_lines)
+
+
+def get_last_n_lines(file_path,nb_lines):
+    with open(file_path, "r", encoding="cp1252") as f:
+        lines = f.readlines()
+
+    return [line.rstrip("\n") for line in lines[-nb_lines:]]
+
+import re
+import matplotlib.pyplot as plt
+
+def plot_results_different_algos(results_by_algo):
+    """
+    results_by_algo : dictionnaire
+        clé   = nom de l'algo (str)
+        valeur = liste de chaînes contenant les moyennes
+    """
+
+    dataset_labels = ["dataset_100 items", "dataset_300 items"]
+
+    def extract_values(lines):
+        hv_100 = hv_300 = eps_100 = eps_300 = None
+
+        for line in lines:
+
+            match = re.search(
+                r'Average for hypervolume for dataset (\d+) items:\s*([0-9.eE+-]+)',
+                line
+            )
+            if match:
+                items = int(match.group(1))
+                value = float(match.group(2))
+                if items == 100:
+                    hv_100 = value
+                elif items == 300:
+                    hv_300 = value
+
+            match = re.search(
+                r'Average for epsilon for dataset (\d+) items:\s*([0-9.eE+-]+)',
+                line
+            )
+            if match:
+                items = int(match.group(1))
+                value = float(match.group(2))
+                if items == 100:
+                    eps_100 = value
+                elif items == 300:
+                    eps_300 = value
+
+        return hv_100, hv_300, eps_100, eps_300
+
+    # Une couleur différente par algo
+    color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    colors = {
+        algo_name: color_cycle[i % len(color_cycle)]
+        for i, algo_name in enumerate(results_by_algo.keys())
+    }
+
+    def make_plot(metric, ylabel, title):
+        plt.figure(figsize=(10, 6))
+
+        for algo_name, lines in results_by_algo.items():
+            hv_100, hv_300, eps_100, eps_300 = extract_values(lines)
+
+            if metric == "hypervolume":
+                values = [hv_100, hv_300]
+            else:
+                values = [eps_100, eps_300]
+
+            plt.plot(
+                dataset_labels,
+                values,
+                marker="o",
+                linestyle="None",
+                color=colors[algo_name],
+                label=algo_name
+            )
+
+        plt.xlabel("Dataset")
+        plt.ylabel(ylabel)
+        plt.title(title)
+        plt.grid(True)
+
+        plt.legend(loc="center left", bbox_to_anchor=(1.02, 0.5))
+        plt.tight_layout()
+        plt.show()
+
+    make_plot("hypervolume", "Hypervolume", "Hypervolume par algo")
+    make_plot("epsilon", "Epsilon", "Epsilon par algo")
+def plot_results(results):
+    """
+    results : dictionnaire
+        clé   = nombre d'itérations (int)
+        valeur = liste de chaînes contenant les moyennes
+    """
+
+    hypervolume_100 = []
+    hypervolume_300 = []
+    epsilon_100 = []
+    epsilon_300 = []
+
+    iterations = sorted(results.keys())
+
+    for iteration in iterations:
+        lines = results[iteration]
+
+        hv_100 = hv_300 = eps_100 = eps_300 = None
+
+        for line in lines:
+
+            # Hypervolume
+            match = re.search(
+                r'Average for hypervolume for dataset (\d+) items:\s*([0-9.eE+-]+)',
+                line
+            )
+
+            if match:
+                items = int(match.group(1))
+                value = float(match.group(2))
+
+                if items == 100:
+                    hv_100 = value
+                elif items == 300:
+                    hv_300 = value
+
+            # Epsilon
+            match = re.search(
+                r'Average for epsilon for dataset (\d+) items:\s*([0-9.eE+-]+)',
+                line
+            )
+
+            if match:
+                items = int(match.group(1))
+                value = float(match.group(2))
+
+                if items == 100:
+                    eps_100 = value
+                elif items == 300:
+                    eps_300 = value
+
+        hypervolume_100.append(hv_100)
+        hypervolume_300.append(hv_300)
+        epsilon_100.append(eps_100)
+        epsilon_300.append(eps_300)
+
+    # --------------------------------------------------
+    # Fonction pour régler automatiquement l'axe Y
+    # --------------------------------------------------
+
+    def set_y_scale(values):
+        valid_values = [v for v in values if v is not None]
+
+        if not valid_values:
+            return
+
+        min_value = min(valid_values)
+        max_value = max(valid_values)
+
+        # Cas où toutes les valeurs sont identiques
+        if min_value == max_value:
+            margin = abs(min_value) * 0.1
+
+            if margin == 0:
+                margin = 1
+
+        else:
+            margin = (max_value - min_value) * 0.1
+
+        plt.ylim(
+            min_value - margin,
+            max_value + margin
+        )
+
+    # ==================================================
+    # 1. Hypervolume - 100 items
+    # ==================================================
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(
+        iterations,
+        hypervolume_100,
+        marker="o"
+    )
+
+    plt.xlabel("Nombre maximal d'évaluations")
+    plt.ylabel("Hypervolume")
+    plt.title("Hypervolume - Dataset 100 items")
+
+    set_y_scale(hypervolume_100)
+
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # ==================================================
+    # 2. Hypervolume - 300 items
+    # ==================================================
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(
+        iterations,
+        hypervolume_300,
+        marker="o"
+    )
+
+    plt.xlabel("Nombre maximal d'évaluations")
+    plt.ylabel("Hypervolume")
+    plt.title("Hypervolume - Dataset 300 items")
+
+    set_y_scale(hypervolume_300)
+
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # ==================================================
+    # 3. Epsilon - 100 items
+    # ==================================================
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(
+        iterations,
+        epsilon_100,
+        marker="o"
+    )
+
+    plt.xlabel("Nombre maximal d'évaluations")
+    plt.ylabel("Epsilon")
+    plt.title("Epsilon - Dataset 100 items")
+
+    set_y_scale(epsilon_100)
+
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # ==================================================
+    # 4. Epsilon - 300 items
+    # ==================================================
+
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(
+        iterations,
+        epsilon_300,
+        marker="o"
+    )
+
+    plt.xlabel("Nombre maximal d'évaluations")
+    plt.ylabel("Epsilon")
+    plt.title("Epsilon - Dataset 300 items")
+
+    set_y_scale(epsilon_300)
+
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+def plot_results_big_dataset_version(results):
+    """
+    results : dictionnaire
+        clé    = nombre d'itérations (int)
+        valeur = liste de chaînes contenant les métriques Hypervolume/Epsilon
+    """
+
+    # Regex : capture le type de métrique, le chemin du dataset, et la valeur
+    pattern = re.compile(
+        r'^\[\*\]\s*(Hypervolume|Epsilon)\s*for\s*dataset\s+(.+):\s+'
+        r'([-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*$'
+    )
+
+    # Regex pour extraire un nom court de dataset depuis le chemin
+    # ex: ...pareto_sets_dataset_250_2\final_pareto.txt_dat -> "250_2"
+    dataset_name_pattern = re.compile(r'pareto_sets_dataset_([^\\]+)\\')
+
+    iterations = sorted(results.keys())
+
+    # data[dataset_name][metric] = liste de valeurs (alignée sur `iterations`)
+    data = {}
+
+    for iteration in iterations:
+        lines = results[iteration]
+
+        # valeurs trouvées pour cette itération : {(dataset, metric): value}
+        current = {}
+
+        for line in lines:
+            match = pattern.match(line)
+            if not match:
+                continue
+
+            metric, path, value_str = match.groups()
+            value = float(value_str)
+
+            name_match = dataset_name_pattern.search(path)
+            dataset_name = name_match.group(1) if name_match else path
+
+            current[(dataset_name, metric)] = value
+
+        # on met à jour data en gardant l'alignement avec `iterations`
+        # (None si la valeur est absente pour cette itération)
+        all_keys = {k for k in current.keys()}
+        for dataset_name, metric in all_keys:
+            data.setdefault(dataset_name, {}).setdefault(metric, [])
+
+        # s'assurer que toutes les séries existantes reçoivent une valeur
+        # (même None) à cette itération, pour rester alignées
+        for dataset_name, metrics in data.items():
+            for metric, series in metrics.items():
+                series.append(current.get((dataset_name, metric)))
+
+    # --------------------------------------------------
+    # Fonction pour régler automatiquement l'axe Y
+    # --------------------------------------------------
+
+    def set_y_scale(values):
+        valid_values = [v for v in values if v is not None]
+
+        if not valid_values:
+            return
+
+        min_value = min(valid_values)
+        max_value = max(valid_values)
+
+        if min_value == max_value:
+            margin = abs(min_value) * 0.1
+            if margin == 0:
+                margin = 1
+        else:
+            margin = (max_value - min_value) * 0.1
+
+        plt.ylim(min_value - margin, max_value + margin)
+
+    # --------------------------------------------------
+    # Un plot par (dataset, métrique)
+    # --------------------------------------------------
+
+    dataset_names = sorted(data.keys())
+
+    for dataset_name in dataset_names:
+        for metric in ("Hypervolume", "Epsilon"):
+            series = data[dataset_name].get(metric)
+            if series is None:
+                continue
+
+            plt.figure(figsize=(10, 6))
+            plt.plot(iterations, series, marker="o")
+
+            plt.xlabel("Nombre maximal d'évaluations")
+            plt.ylabel(metric)
+            plt.title(f"{metric} - Dataset {dataset_name}")
+
+            set_y_scale(series)
+
+            plt.grid(True)
+            plt.tight_layout()
+            plt.show()
+def make_dictionnary_results(paths):
+  
+
+    results = {}
+    iterations = [25, 50, 75, 100]
+    for path,iter in zip(paths, iterations):
+        l=get_last_n_lines(path, 4)
+        results[iter] = l
+    print(results)
+       
+    return results
+
+
+
+def get_lines_with_metrics(path):
+
+    pattern = re.compile(
+
+    r'^\[\*\]\s+(?:Epsilon|Hypervolume)\s+for dataset\s+.+:\s+[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?\s*$'
+    )
+
+    matching_lines = []
+    with open(path, 'r', encoding="cp1252") as f:
+        for line in f:
+            line = line.rstrip('\n')
+            if pattern.match(line):
+                matching_lines.append(line)
+   
+    return matching_lines
+
+
+def make_dictionnary_results_big_dataset_version(paths):
+  
+
+    results = {}
+    iterations = [25, 50, 75, 100]
+    for path,iter in zip(paths, iterations):
+        l=get_lines_with_metrics(path)
+        results[iter] = l
+    
+       
+    return results
+
+def make_dictionnary_results_by_algo(paths):
+    """
+    results_by_algo : dictionnaire
+        clé   = nom de l'algo (str)
+        valeur = dictionnaire results de cet algo
+                 clé   = nombre d'itérations (int)
+                 valeur = liste de chaînes contenant les moyennes
+    """
+    algo_names=["GW-ACO_classique", "best_heuristic_for_config C ", "best_heuristic_for_config D "]
+    results_by_algo = {}
+    for path,algo_name in zip(paths, algo_names):
+        l=get_last_n_lines(path, 4)
+        results_by_algo[algo_name] = l
+    return results_by_algo
+
+def get_code_path(execution_directory):
+    log_file=os.path.join(execution_directory,"mo_mkp_aco-aco.log")
+    
+    with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
+     text = f.read()
+
+    m = re.search(r"Best Code Path Overall:.*?file://(.+?\.txt)", text)
+
+    if m:
+        best_code_path = m.group(1)
+        return best_code_path
+        # C:\Reevo\outputs\mo_mkp_aco-aco\2026-09-07_11-03-56\problem_iter3_response1.txt
+    else:
+        best_code_path = None
+        print("Chemin non trouvé dans le fichier.")

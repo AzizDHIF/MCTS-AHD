@@ -34,7 +34,7 @@ int NBi=250+100;
 int nbgeneration=50;
 /* MOACO parameters */
 /*double meilprofit[dimension];*/
-/*double pheromone [NBITEMS_500];*/
+/*double pheromone [NBITEMS_750];*/
 int paretoIni=15000;
 int nbants=20;
 double rhot=0.90;
@@ -49,8 +49,7 @@ int tinit=1;
 
 
 int bruit_rate=10;
-double pheromone[NBITEMS_500];
-
+double pheromone[NBITEMS_750];
 int inter;
 int iseed;
 
@@ -68,10 +67,8 @@ pop *P=NULL;
 
 float rho ;  /* determines the reference point for the hypervolume indicator */
 FILE *Wfile;
-
 int dim;
 int problem_size;
-
 int nombreLIGNE=0;
 int nextLn=0;
 int inv=0;
@@ -803,12 +800,12 @@ solutions->size=nbants;
 
 /*random_normalisated_weights(); *///random weight
             solutions->ind_array[ant]=create_ind(nf);
-			int pris[NBITEMS_500];
+			int pris[NBITEMS_750];
 			double capacit[dimension];
 
 
-			int voisinage [NBITEMS_500];
-			double proba[NBITEMS_500];
+			int voisinage [NBITEMS_750];
+			double proba[NBITEMS_750];
 
 
 
@@ -864,7 +861,7 @@ solutions->size=nbants;
 	else
 	{
 		double tot=0,h=0;
-		double som[NBITEMS_500];
+		double som[NBITEMS_750];
         double tmp; double mul;
 
 
@@ -878,7 +875,7 @@ solutions->size=nbants;
 			{
 			    eta[j]=0;
 			//eta=eta+profits[j][voisinage[i]]/h;/* printf("voisinage 2");*/ //agreration de tt les objectifs
-			eta[j]=heuristic_eval_500(i,weights,capacit,nv,voisinage,profits[j]); //info heuristique pour chaque obj
+			eta[j]=heuristic_eval_750(i,weights,capacit,nv,voisinage,profits[j]); //info heuristique pour chaque obj
       
             mul=beta*vector_weight[j];
 
@@ -987,11 +984,14 @@ inter=k;
 
 	FILE *fpareto;
   
-  if(strcmp(argv[1],"dataset\\mood_final_val_dataset\\500.2.txt")==0){
-	fpareto = fopen( "results_final_val_dataset_500_2.txt", "a+" );}
+if(strcmp(argv[1],"dataset\\mood_final_val_dataset\\750.2.txt")==0){
+	fpareto = fopen( "results_final_val_dataset_750_2.txt", "a+" );}
 
-  if(strcmp(argv[1],"dataset\\mood_final_val_dataset\\500.4.txt")==0){
-	fpareto = fopen( "results_final_val_dataset_500_4.txt", "a+" );}
+if(strcmp(argv[1],"dataset\\mood_final_val_dataset\\750.3.txt")==0){
+	fpareto = fopen( "results_final_val_dataset_750_3.txt", "a+" );}
+
+if(strcmp(argv[1],"dataset\\mood_final_val_dataset\\750.4.txt")==0){
+	fpareto = fopen( "results_final_val_dataset_750_4.txt", "a+" );}
   
 
 	fprintf(fpareto,"mcycle %d nbants %d alphat %d beta %lf rho %lf tmax %lf\n",maxcycle,nbants,alphat,beta,rhot,tmax);

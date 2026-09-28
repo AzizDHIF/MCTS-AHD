@@ -1,22 +1,27 @@
 #include "HBACO.h" 
-/* The algorithm employs a greedy approach that favors items with high profit-to-weight ratios, while also incorporating limited neighboring items to balance the selection while ensuring it does not exceed remaining capacity along each dimension. */
-double heuristic(int index_item, double weights[dimension][NBITEMS], double capacity[dimension], int nb_voisinage, int voisinage[NBITEMS], double profit[NBITEMS]) {
-    double total_profit = profit[index_item];
-    double total_weight = 0.0;
-    double ratio = profit[index_item] / (weights[0][index_item] + 1e-10); // Assuming uniform dimension with weight for simplicity
+double heuristic(int index_item, double **weights, double *capacity, int nb_voisinage, int *voisinage, double *profit) {
+/* The new algorithm evaluates the item's potential by enhancing the profitability score with a ratio of the profit to the total weight of the neighbors, and it applies a penalty for exceeding capacities across dimensions to ensure a balanced selection strategy. */
 
-    for (int i = 0; i < nb_voisinage; i++) {
-        int neighbor_index = voisinage[i];
-        if (total_weight + weights[0][neighbor_index] <= capacity[0]) { // Only checking the first dimension
-            total_profit += profit[neighbor_index];
-            total_weight += weights[0][neighbor_index];
-            double neighbor_ratio = profit[neighbor_index] / (weights[0][neighbor_index] + 1e-10);
-            if (neighbor_ratio > ratio) {
-                ratio = neighbor_ratio;
+    double score = profit[index_item]; // Start with the profit of the current item
+    double weight_sum = 0.0; // Sum of weights of neighboring items
+    int d;
+
+    // Calculate total weight of the neighboring items to adjust the score
+    for (d = 0; d < dimension; d++) {
+        if (capacity[d] < weights[d][index_item]) {
+            return 0.0; // If the item cannot fit, return 0
+        }
+
+        // Check neighbors for their weight impact
+        for (int i = 0; i < nb_voisinage; i++) {
+            int neighbor = voisinage[i];
+            if (neighbor >= 0) {
+                weight_sum += weights[d][neighbor]; // Aggregate their weights
             }
         }
     }
 
-    double heuristic_value = total_profit / (total_weight + 1e-10) * (capacity[0] / (total_weight + 1e-10));
-    return heuristic_value;
+    double profit_to_weight_ratio = (weight_sum > 0) ? score / weight_sum : score; // Apply profit-to-weight ratio if weight_sum is not zero
+    score -= weight_sum; // Adjust the score by subtracting neighbor weights
+    return score * profit_to_weight_ratio; // Return the final heuristic score
 }
