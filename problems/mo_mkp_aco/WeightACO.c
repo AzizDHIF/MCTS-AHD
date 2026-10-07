@@ -10,7 +10,9 @@
 #include "HBACO.h"
 
 
+
 /*#define NBANTS 100*/
+
 #define FREQUANCY 80
 
 
@@ -19,8 +21,9 @@
 #endif
 
 
-int dimension;                 // défini ici, alloué dynamiquement plus tard
-
+int dimension;                
+int NBITEMS;
+double *pheromone=NULL;
 double *capacities = NULL;
 double **weights = NULL;
 double **profits = NULL;
@@ -28,13 +31,14 @@ double *referencePoint = NULL;
 double *eta = NULL;
 double *vector_weight = NULL;
 double **OBJ_Weights = NULL;
+
 int nf,ni,cardP;
 int nombr;
 int NBi=250+100;
 int nbgeneration=50;
 /* MOACO parameters */
 /*double meilprofit[dimension];*/
-/*double pheromone [NBITEMS_250];*/
+/*double pheromone [NBITEMS];*/
 int paretoIni=15000;
 int nbants=20;
 double rhot=0.90;
@@ -45,13 +49,10 @@ int maxcycle=800;
 double tmax=1.0 , beta=10.0;
 int tinit=1;
 
-
  ///////////*************
 
 
 int bruit_rate=10;
-double pheromone[NBITEMS_250];
-
 int inter;
 int iseed;
 
@@ -69,10 +70,8 @@ pop *P=NULL;
 
 float rho ;  /* determines the reference point for the hypervolume indicator */
 FILE *Wfile;
-
 int dim;
 int problem_size;
-
 int nombreLIGNE=0;
 int nextLn=0;
 int inv=0;
@@ -87,7 +86,8 @@ void loadMOKP(char *s){
   printf(" %d %d  \n ", nf, ni);
 
   dimension = nf;   // <-- clé : dimension suit maintenant nf
-
+  NBITEMS=ni;  // <-- clé : NBITEMS suit maintenant ni
+  pheromone = malloc(NBITEMS * sizeof(double));  
   capacities   = malloc(dimension * sizeof(double));
   weights      = malloc(dimension * sizeof(double*));
   profits      = malloc(dimension * sizeof(double*));
@@ -114,7 +114,6 @@ void loadMOKP(char *s){
   }
   fclose(source);
 }
-
 
   /********************************/
  /* Begin memory (des)allocation */
@@ -473,7 +472,7 @@ void initfile_weights()
 
 
 
-  Wfile = fopen( "Weights.txt", "a+" );
+  Wfile = fopen( "Weights_train.txt", "a+" );
   fflush(stdout);
 
 if (nf==2)
@@ -804,12 +803,12 @@ solutions->size=nbants;
 
 /*random_normalisated_weights(); *///random weight
             solutions->ind_array[ant]=create_ind(nf);
-			int pris[NBITEMS_250];
+			int pris[NBITEMS];
 			double capacit[dimension];
 
 
-			int voisinage [NBITEMS_250];
-			double proba[NBITEMS_250];
+			int voisinage [NBITEMS];
+			double proba[NBITEMS];
 
 
 
@@ -865,11 +864,11 @@ solutions->size=nbants;
 	else
 	{
 		double tot=0,h=0;
-		double som[NBITEMS_250];
+		double som[NBITEMS];
     double tmp; double mul;
 
 
-		for (i=0; i<nv; i++)
+				for (i=0; i<nv; i++)
 			{
 				tmp=1;
 
@@ -878,15 +877,14 @@ solutions->size=nbants;
 			{
 			    eta[j]=0;
 			//eta=eta+profits[j][voisinage[i]]/h;/* printf("voisinage 2");*/ //agreration de tt les objectifs
-			eta[j]=heuristic_eval_250(i,weights,capacit,nv,voisinage,profits[j]); //info heuristique pour chaque obj
+			eta[j]=heuristic(i,weights,capacit,nv,voisinage,profits[j]); //info heuristique pour chaque obj
 
             mul=beta*vector_weight[j];
-
             tmp=tmp*pow(eta[j],mul);
 
 		}
 
-	//	eta=profits[f][voisinage[i]]/poids[j][voisinage[i]];//eta dépend que de l'objectif de col //
+	//eta=profits[f][voisinage[i]]/poids[j][voisinage[i]];//eta dépend que de l'objectif de col //
 
  	 proba[i]=tmp*monPow(pheromone[voisinage[i]],alphat);
 		som[i]= tot + proba[i]; /*printf("som");*/
@@ -972,12 +970,12 @@ int main(int argc, char* argv[])
   char *data_path=argv[1];
   loadMOKP(data_path);
   
-  /*initfile_weights_log();*/            
+  /*initfile_weights_log();*/          
 
   read_weights_file("Weights.txt");
 
-   for(k=1;k<=3;k++)
- {
+   for(k=1;k<=3;k++){
+ 
     init_time=0.0;
     duration=0;
     double mpareto1[15000][dimension];
@@ -987,13 +985,38 @@ inter=k;
 
 	FILE *fpareto;
   
-  if(strcmp(argv[1],"dataset\\mood_final_val_dataset\\250.2.txt")==0){
-	fpareto = fopen( "results_final_val_dataset_250_2.txt", "a+" );}
+  if (argc > 2 && argv[2] != NULL && argv[2][0] != '\0') {
+  fpareto = fopen(argv[2],"a+");}
 
-  if(strcmp(argv[1],"dataset\\mood_final_val_dataset\\250.3.txt")==0){
-	fpareto = fopen( "results_final_val_dataset_250_3.txt", "a+" );}
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_0_instance_100_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_0_100_items.txt", "a+" );}
 
- 
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_1_instance_100_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_1_100_items.txt", "a+" );}
+
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_2_instance_100_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_2_100_items.txt", "a+" );}
+
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_3_instance_100_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_3_100_items.txt", "a+" );}
+
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_4_instance_100_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_4_100_items.txt", "a+" );}
+  
+    if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_0_instance_300_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_0_300_items.txt", "a+" );}
+
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_1_instance_300_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_1_300_items.txt", "a+" );}
+
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_2_instance_300_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_2_300_items.txt", "a+" );}
+
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_3_instance_300_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_3_300_items.txt", "a+" );}
+
+  if(strcmp(argv[1],"dataset\\mood_val_dataset\\dataset_4_instance_300_items_3_objectifs.txt")==0){
+	fpareto = fopen( "results_val_dataset_4_300_items.txt", "a+" );}
 
 	fprintf(fpareto,"mcycle %d nbants %d alphat %d beta %lf rho %lf tmax %lf\n",maxcycle,nbants,alphat,beta,rhot,tmax);
 	fflush(stdout);
@@ -1056,9 +1079,7 @@ fprintf(fpareto,"cardinalité ensemble Pareto %d \n temps CPU %f \n", P->size, i
 
 	for(i=0;i<P->size;i++)
 	{for(j=0;j<nf;j++)
-		{
-            
-        fprintf(fpareto,"%f ",P->ind_array[i]->f[j]);
+		{fprintf(fpareto,"%f ",P->ind_array[i]->f[j]);
 		fflush(stdout);
 		mpareto1[i][j]=P->ind_array[i]->f[j];
 		}
@@ -1118,12 +1139,7 @@ cardP2= otherResult("result500.3\\result500.3.1.txt",pareto2);
 /*free(bounds); printf( " \nfree bounds" );*/
 
 
-
-
-
-}
-
-
+   }
 return(0);
 
 }

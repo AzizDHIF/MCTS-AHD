@@ -20,7 +20,7 @@ def print_hyperlink(path, text=None):
     full_path = f"file://{os.path.abspath(path)}"
     return f"\033]8;;{full_path}\033\\{text}\033]8;;\033\\"
 
-def write_heuristic_train(input_txt_path: str, output_c_path: str) -> None:
+def write_heuristic(input_txt_path: str, output_c_path: str) -> None:
    
     with open(input_txt_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -40,25 +40,7 @@ def write_heuristic_train(input_txt_path: str, output_c_path: str) -> None:
         f.write(new_content)
 
 
-def write_heuristic_eval(input_txt_path: str, output_c_path: str,nbitems: str) -> None:
-   
-    with open(input_txt_path, 'r', encoding='utf-8') as f:
-        content = f.read()
 
-    # Construit un pattern qui matche n'importe quel nom de la liste
-    pattern = r'\b(' + '|'.join(re.escape(name) for name in possible_func_names) + r')\b'
-    pattern_2= 'NBITEMS'
-    new_content, count = re.subn(pattern, f'heuristic_eval_{nbitems}', content)
-
-    if count == 0:
-        raise ValueError(
-            f"Aucun nom de fonction parmi {possible_func_names} trouvé dans '{input_txt_path}'"
-        )
-        
-    new_content,count=re.subn(pattern_2,f'NBITEMS_{nbitems}',new_content)
-    with open(output_c_path, 'w', encoding='utf-8') as f:
-        f.write('#include "HBACO.h" \n')
-        f.write(new_content)
 
 def compile(c_file_name,exe_file_name):
     run_cmd = ["gcc", c_file_name, "gpt.c", "-o", exe_file_name]
@@ -378,9 +360,7 @@ if __name__ == "__main__":
 
             print("[*] compiling ... ")
             
-            write_heuristic_train(os.path.join(WORK_DIR,"gpt.txt"),os.path.join(WORK_DIR,"gpt.c"))
-
-            compile("WeightACO_train_100items.c",f"WeightACO_train_100items_{id_response}.exe")
+            compile("WeightACO.c",f"WeightACO_train_100items_{id_response}.exe")
 
             #lancer l'ACO sur les datasets du train
             print("[*] Running ACO on training datasets...")
@@ -470,11 +450,11 @@ if __name__ == "__main__":
             for nb_items in [100,300]:
                 
                 print("[*] Writing the C code into gpt.c...")
-                write_heuristic_eval(os.path.join(WORK_DIR,"gpt.txt"),os.path.join(WORK_DIR,"gpt.c"),f'{nb_items}')
+                
         
                 for i in range(5):
-                    print(f"[*] Compiling WeightACO_eval_{nb_items}items.c")
-                    compile(f"WeightACO_eval_{nb_items}items.c",f"WeightACO_eval_{nb_items}items.exe") 
+                    print(f"[*] Compiling WeightACO.c")
+                    compile(f"WeightACO.c",f"WeightACO_eval_{nb_items}items.exe") 
                     run_aco(f"WeightACO_eval_{nb_items}items",args=[f"dataset\\mood_val_dataset\\dataset_{i}_instance_{nb_items}_items_3_objectifs.txt"])
                 
 

@@ -4,12 +4,7 @@
 #include "Common.h"
 #include <stddef.h>
 extern int dimension;
-#define NBITEMS 100
-#define NBITEMS_100 100
-#define NBITEMS_250 250
-#define NBITEMS_300 300
-#define NBITEMS_500 500
-#define NBITEMS_750 750
+extern int NBITEMS;
 
 /*typedef struct {
 int *items_nonpris;

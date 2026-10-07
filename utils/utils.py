@@ -3,6 +3,8 @@ import re
 import inspect
 import hydra
 import os 
+possible_func_names = ["heuristic"]
+
 HEADER_RULES = {
     'math.h': [
         'sqrt', 'pow', 'fabs', 'ceil', 'floor', 'fmod', 'exp', 'log',
@@ -87,7 +89,22 @@ def block_until_running(stdout_filepath, log_status=False, iter_num=-1, response
 
 
 
+def rename_heuristic(content: str) -> str:
+    
 
+    # Pattern qui matche n'importe quel nom de la liste
+    pattern = r'\b(' + '|'.join(re.escape(name) for name in possible_func_names) + r')\b'
+
+    new_content, count = re.subn(pattern, 'heuristic', content)
+    if count == 0:
+        raise ValueError(
+            f"Aucun nom de fonction parmi {possible_func_names} trouvé dans le contenu fourni"
+        )
+
+    if '#include "HBACO.h"\n' not in new_content:
+        new_content = '#include "HBACO.h"\n' + new_content
+
+    return new_content
 
 def extract_c_code_from_generator(content):
     """Extract C heuristic function from the response of the code generator."""
@@ -96,7 +113,7 @@ def extract_c_code_from_generator(content):
     pattern_code = r'```c(.*?)```'
     code_string = re.search(pattern_code, content, re.DOTALL)
     code_string = code_string.group(1).strip() if code_string is not None else None
-
+    code_string = rename_heuristic(code_string) if code_string is not None else None
     if code_string is None:
         # 2. Cherche la signature de la fonction directement dans le contenu
         lines = content.split('\n')
@@ -107,7 +124,7 @@ def extract_c_code_from_generator(content):
 
         for i, line in enumerate(lines):
             # Détecte le début de la fonction via sa signature
-            if 'double heuristics_v2(' in line:
+            if 'double heuristic(' in line:
                 start = i
             
             # Compte les accolades pour trouver la fin du bloc
@@ -132,8 +149,12 @@ def extract_c_code_from_generator(content):
                 break  # un seul symbole trouvé suffit pour ajouter ce header
 
     includes = '\n'.join(f'#include <{h}>' for h in needed_headers)
-    code_string = '#include "HBACO.h"\n' + (includes + '\n' if includes else '') + code_string
+    code_string =  (includes + '\n' if includes else '') + code_string
+    
+    if '#include "HBACO.h"\n' not in code_string:
+        code_string = '#include "HBACO.h"\n' + code_string
     return code_string
+
 
 def filter_code(code_string):
     """Remove lines containing signature and include statements."""

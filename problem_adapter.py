@@ -78,7 +78,7 @@ class Problem:
         self.problem_size = self.config.problem.problem_size
         self.obj_type = self.config.problem.obj_type
         self.problem_type = self.config.problem.problem_type
-        self.output_file = f"{self.root_dir}/problems/{self.problem}/gpt.txt"
+        self.output_file = f"{self.root_dir}/problems/{self.problem}/gpt.c"
 
         if self.problem_type == "tsp_constructive":
             from .original.prompts.tsp_greedy import GetPrompts
@@ -147,8 +147,10 @@ class Problem:
                 logging.debug(f"Iteration {self.iteration}: Processing Code Run {runid}")
                 
                 with open(self.output_file, 'w', encoding = 'utf-8', errors='replace') as file:
-                    file.writelines(individual["code"] + '\n')
+                    
+                    file.writelines(extract_c_code_from_generator(individual["code"]) + '\n')
 
+                
                 # Execute the python file with flags
                 with open(individual["stdout_filepath"], 'w') as f:
                     file_path = f'{self.root_dir}/problems/{self.problem}/eval.py' if self.problem_type != "black_box" else f'{self.root_dir}/problems/{self.problem}/eval_black_box.py'
@@ -183,9 +185,12 @@ class Problem:
             # Store objective value and fitness for each individual
             if traceback_msg == '':  # If execution has no error
                 try:
-                    individual["obj"] = float(stdout_str.split('\n')[-2])
-                    assert individual["obj"] > 0, "Objective value <= 0 is not supported."
-                    individual["obj"] = -individual["obj"] if self.obj_type == "max" else individual["obj"]
+                    if self.config.metric == "epsilon":
+                       individual["obj"] = float(stdout_str.split('\n')[-2])
+                    else:
+                        individual["obj"] = -float(stdout_str.split('\n')[-2])
+
+                    
                     # individual["fitness"] = 1 / individual["obj"] if self.obj_type == "min" else individual["obj"]
                     individual["exec_success"] = True
                 except:
